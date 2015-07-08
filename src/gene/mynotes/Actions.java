@@ -1,17 +1,18 @@
 package gene.mynotes;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 import javax.swing.JFileChooser;
+import javax.swing.JTextPane;
 
 public class Actions {
 	
 	private final static JFileChooser fileChooser = new JFileChooser();
 	
-	public static void newFile() {
-		
+	public static void newFile(Window window) {
+		window.getTabbedPane().addTab();
 	}
 
 	public static void openFile(Window window) {
@@ -19,6 +20,26 @@ public class Actions {
 		
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fileChooser.getSelectedFile();
+			FileReader reader;
+			
+			JTextPane textPane = new JTextPane();			
+			
+			try {
+				reader = new FileReader(file);
+				
+				try {
+					textPane.read(reader, file);				
+				}
+				finally {
+					reader.close();
+				}
+			}
+			catch (IOException e) {
+				System.err.println("Failed to read file: "+ file.getName());
+				e.printStackTrace();
+			}
+			
+			window.getTabbedPane().addTab(file.getName(), textPane);
 		}
 	}
 }

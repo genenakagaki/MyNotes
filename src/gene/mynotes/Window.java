@@ -1,18 +1,16 @@
 package gene.mynotes;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.JFileChooser;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 
 public class Window extends JFrame {
@@ -49,7 +47,7 @@ public class Window extends JFrame {
 		menuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				Actions.newFile();	
+				Actions.newFile(Window.this);	
 			}
 		});
 		menu.add(menuItem);
@@ -69,13 +67,16 @@ public class Window extends JFrame {
 	}
 	
 	private void createContentPane() {
-		JPanel contentPane = new JPanel(new BorderLayout());
-		
 		tabbedPane = new TabbedPane();
-		contentPane.add(tabbedPane);
 		
-		tabbedPane.addTab("untitled", new JTextPane());
+		tabbedPane.setLayout(new BoxLayout(tabbedPane, BoxLayout.Y_AXIS));
 		
-		setContentPane(contentPane);
+		tabbedPane.addTab();
+		
+		setContentPane(tabbedPane);
+	}
+	
+	public TabbedPane getTabbedPane() {
+		return tabbedPane;
 	}
 }
