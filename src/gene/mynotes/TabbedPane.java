@@ -1,18 +1,15 @@
 package gene.mynotes;
 
-import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.JLayeredPane;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
-import javax.swing.text.LayeredHighlighter.LayerPainter;
 
 public class TabbedPane extends JPanel implements MouseListener {
 	
@@ -40,7 +37,7 @@ public class TabbedPane extends JPanel implements MouseListener {
 		tabLayout.setVgap(0);
 		tabContainer = new JPanel();
 		tabContainer.setLayout(tabLayout);
-		tabContainer.setPreferredSize(new Dimension(600, 20));	
+		tabContainer.setPreferredSize(new Dimension(600, 18));	
 		tabContainer.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, MyNotes.getMainColor()));
 		
 		add(tabContainer);
@@ -49,16 +46,32 @@ public class TabbedPane extends JPanel implements MouseListener {
 		cardPane = new JPanel(new CardLayout());
 		cardPane.setBorder(BorderFactory.createMatteBorder(0, 2, 2, 2, MyNotes.getMainColor()));
 		
-		add(cardPane);
-		
+		add(cardPane);	
 	}
-	
+	// --------------------------------------------------------------------------------
+	//   Tab actions
+	// --------------------------------------------------------------------------------
 	public void addTab() {
 		addTab("Untitled", new JTextPane());
 	}
 	
 	public void addTab(String title, JTextPane textPane) {
-		tabs[tabCount] = new Tab(title);
+		Tab tab = new Tab(title, tabCount);
+		tab.getCloseButton().addMouseListener(new MouseListener() {
+			public void mouseClicked(MouseEvent arg0) {}
+			public void mouseEntered(MouseEvent e) {
+				tab.getCloseButton().setIcon(tab.getCloseIconIn());
+			}
+			public void mouseExited(MouseEvent e) {
+				tab.getCloseButton().setIcon(tab.getCloseIconOut());
+			}
+			public void mousePressed(MouseEvent e) {}
+			public void mouseReleased(MouseEvent e) {
+				closeTab(tab.getPosition());
+			}
+		});
+		
+		tabs[tabCount] = tab;
 		textPanes[tabCount] = textPane;
 		
 		tabContainer.add(tabs[tabCount]);
@@ -74,6 +87,43 @@ public class TabbedPane extends JPanel implements MouseListener {
 		revalidate();
 	}
 	
+	public void closeTab(int index) {
+//		System.out.println("closeTab called: "+ index);
+		tabContainer.remove(tabs[index]);
+		cardPane.remove(textPanes[index]);
+		
+		tabCount --;
+		for (int i = index; i < tabCount; i++) {
+			tabs[i] = tabs[i+1];
+			tabs[i].setPosition(i);
+			textPanes[i] = textPanes[i+1];
+		}
+		
+		tabContainer.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, MyNotes.getMainColor()));
+		if (index != 0 && index == selectedTab) {
+			System.out.println(index + " "+ tabCount);
+			if (index == tabCount) {
+				setSelectedTab(index-1);
+			}
+			else {
+				setSelectedTab(index);
+			}
+		}			
+		
+		revalidate();
+	}
+	
+	public void setSelectedTab(int index) {
+		tabs[selectedTab].setBackground(MyNotes.getSubColor());
+		tabs[index].setBackground(MyNotes.getMainColor());
+		
+		CardLayout cardLayout = (CardLayout)(cardPane.getLayout());
+		cardLayout.show(cardPane, Integer.toString(index));
+		selectedTab = index;
+	}
+	// --------------------------------------------------------------------------------
+	//   Private methods
+	// -------------------------------------------------------------------------------- 
 	private void increaseTabCapacity() {
 		Tab[] newTabs = new Tab[tabs.length * 2];
 		JTextPane[] newContents = new JTextPane[tabs.length * 2];
@@ -85,31 +135,40 @@ public class TabbedPane extends JPanel implements MouseListener {
 		tabs = newTabs;
 		textPanes = newContents;
 	}
-	
-	private void setSelectedTab(int index) {
-		tabs[selectedTab].setBackground(MyNotes.getSubColor());
-		tabs[index].setBackground(MyNotes.getMainColor());
-		
-		CardLayout cardLayout = (CardLayout)(cardPane.getLayout());
-		cardLayout.show(cardPane, Integer.toString(index));
-		selectedTab = index;
-	}
-
+	// --------------------------------------------------------------------------------
+	//   Mouse listener
+	// --------------------------------------------------------------------------------
 	public void mouseClicked(MouseEvent arg0) {
+	}
+	public void mouseEntered(MouseEvent arg0) {
 		if (tabContainer.getMousePosition() != null) {
 			for (int i = 0; i < tabCount; i++) {
 				if (tabs[i].getMousePosition() != null) {
-					setSelectedTab(i);
+					JLabel closeBtn = tabs[i].getCloseButton();
+					if (closeBtn.getMousePosition() != null) {
+						System.out.println("unko");
+					}
 				}
 			}
 		}
 	}
-	public void mouseEntered(MouseEvent arg0) {
-	}
 	public void mouseExited(MouseEvent arg0) {
 	}
-	public void mousePressed(MouseEvent arg0) {
+	public void mousePressed(MouseEvent e) {
 	}
 	public void mouseReleased(MouseEvent arg0) {
+		if (tabContainer.getMousePosition() != null) {
+			for (int i = 0; i < tabCount; i++) {
+				if (tabs[i].getMousePosition() != null) {
+					JLabel closeBtn = tabs[i].getCloseButton();
+					if (closeBtn.getMousePosition() != null) {
+						closeTab(i);
+					}
+					else if (i != selectedTab) {
+						setSelectedTab(i);
+					}
+				}
+			}
+		}
 	}
 }

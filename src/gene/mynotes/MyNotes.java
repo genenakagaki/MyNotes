@@ -9,6 +9,8 @@ import java.net.URL;
 
 import javax.swing.JFileChooser;
 
+import gene.utils.Utils;
+
 public class MyNotes {
 	
 	private int width;
@@ -28,51 +30,37 @@ public class MyNotes {
 	}
 
 	private void loadSettings() {
-		URL fileURL = getClass().getResource("/settings");
-		File file = new File(fileURL.getFile());
-
-		String line;
+		String fileStr = Utils.readFile("/settings");
+		
+		String[] lines = fileStr.split("\n");
 		String[] setting = new String[2];
 		
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
+		for (String line: lines) {
+			setting = line.split("=");
 			
-			try {
-				while ((line = reader.readLine()) != null) {
-					setting = line.split("=");
-					
-					switch (setting[0]) {
-					case "width":
-						width = Integer.parseInt(setting[1]);
-						break;
-					case "height":
-						height = Integer.parseInt(setting[1]);
-						break;
-					case "x-position":
-						xPos = Integer.parseInt(setting[1]);
-						break;
-					case "y-position":
-						yPos = Integer.parseInt(setting[1]);
-						break;
-					case "main-color":
-						mainColor = hex2Rgb(setting[1]);
-						break;
-					case "sub-color":
-						subColor = hex2Rgb(setting[1]);
-						break;
-					default:
-						System.err.println("Failed to read setting: "+ setting[0]);
-						break;
-					}
-				}
+			switch (setting[0]) {
+			case "width":
+				width = Integer.parseInt(setting[1]);
+				break;
+			case "height":
+				height = Integer.parseInt(setting[1]);
+				break;
+			case "x-position":
+				xPos = Integer.parseInt(setting[1]);
+				break;
+			case "y-position":
+				yPos = Integer.parseInt(setting[1]);
+				break;
+			case "main-color":
+				mainColor = hex2Rgb(setting[1]);
+				break;
+			case "sub-color":
+				subColor = hex2Rgb(setting[1]);
+				break;
+			default:
+				System.err.println("Failed to read setting: "+ setting[0]);
+				break;
 			}
-			finally {
-				reader.close();
-			}
-		}
-		catch (IOException e) {
-			System.err.println("Failed to read file: "+ file.getName());
-			e.printStackTrace();
 		}
 	}
 	
