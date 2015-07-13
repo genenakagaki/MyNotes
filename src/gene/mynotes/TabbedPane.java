@@ -5,30 +5,41 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.text.Document;
+import javax.swing.undo.UndoManager;
+
+import gene.mynotes.menu.EditMenu;
 
 public class TabbedPane extends JPanel implements MouseListener {
 	
 	private static final long serialVersionUID = -6946514662424253722L;
+
+	private Window window;
 	
 	private JPanel tabContainer;
 	
 	private Tab[] tabs;
-	private JTextPane[] textPanes;
+	private JTextPane[] contents;
 	private JPanel cardPane;
 	
 	private int tabCount;
 	private int selectedTab;
 	
-	public TabbedPane() {
+	public TabbedPane(Window window) {
 		super();
 		
+		this.window = window;
+		
 		tabs = new Tab[2];
-		textPanes = new JTextPane[2];
+		contents = new JTextPane[2];
 		
 		tabCount = 0;
 
@@ -52,11 +63,11 @@ public class TabbedPane extends JPanel implements MouseListener {
 	//   Tab actions
 	// --------------------------------------------------------------------------------
 	public void addTab() {
-		addTab("Untitled", new JTextPane());
+		addTab(null, new JTextPane());
 	}
 	
-	public void addTab(String title, JTextPane textPane) {
-		Tab tab = new Tab(title, tabCount);
+	public void addTab(File file, JTextPane textPane) {
+		Tab tab = new Tab(file, tabCount);
 		tab.getCloseButton().addMouseListener(new MouseListener() {
 			public void mouseClicked(MouseEvent arg0) {}
 			public void mouseEntered(MouseEvent e) {
@@ -72,10 +83,18 @@ public class TabbedPane extends JPanel implements MouseListener {
 		});
 		
 		tabs[tabCount] = tab;
-		textPanes[tabCount] = textPane;
-		
 		tabContainer.add(tabs[tabCount]);
-		cardPane.add(textPanes[tabCount], Integer.toString(tabCount));
+
+		Document textPaneDoc = textPane.getDocument();
+		textPaneDoc.addUndoableEditListener(new UndoableEditListener() {
+			@Override
+			public void undoableEditHappened(UndoableEditEvent e) {
+				EditMenu.getUndoManager().addEdit(e.getEdit());
+				
+			}
+		});
+		contents[tabCount] = textPane;
+		cardPane.add(contents[tabCount], Integer.toString(tabCount));
 		
 		setSelectedTab(tabCount);
 		
@@ -84,56 +103,82 @@ public class TabbedPane extends JPanel implements MouseListener {
 			increaseTabCapacity();
 		}
 		
+		contents[selectedTab].requestFocus();
+		
 		revalidate();
 	}
 	
 	public void closeTab(int index) {
 //		System.out.println("closeTab called: "+ index);
-		tabContainer.remove(tabs[index]);
-		cardPane.remove(textPanes[index]);
 		
-		tabCount --;
-		for (int i = index; i < tabCount; i++) {
-			tabs[i] = tabs[i+1];
-			tabs[i].setPosition(i);
-			textPanes[i] = textPanes[i+1];
+		if (index >= 0) {
+			tabContainer.remove(tabs[index]);
+			cardPane.remove(contents[index]);
+			
+			tabCount --;
+			for (int i = index; i < tabCount; i++) {
+				tabs[i] = tabs[i+1];
+				tabs[i].setPosition(i);
+				contents[i] = contents[i+1];
+			}
+			
+			tabContainer.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, MyNotes.getMainColor()));
+			if (index == selectedTab) {
+				if (index == tabCount) {
+					setSelectedTab(index-1);
+				}
+				else {
+					setSelectedTab(index);
+				}
+			}
+			
+			revalidate();
 		}
-		
-		tabContainer.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, MyNotes.getMainColor()));
-		if (index != 0 && index == selectedTab) {
-			System.out.println(index + " "+ tabCount);
-			if (index == tabCount) {
-				setSelectedTab(index-1);
-			}
-			else {
-				setSelectedTab(index);
-			}
-		}			
-		
-		revalidate();
+		else {
+			window.close();
+		}
 	}
 	
 	public void setSelectedTab(int index) {
-		tabs[selectedTab].setBackground(MyNotes.getSubColor());
-		tabs[index].setBackground(MyNotes.getMainColor());
-		
-		CardLayout cardLayout = (CardLayout)(cardPane.getLayout());
-		cardLayout.show(cardPane, Integer.toString(index));
-		selectedTab = index;
+		if (index != -1) {
+			tabs[selectedTab].setBackground(MyNotes.getSubColor());
+			tabs[index].setBackground(MyNotes.getMainColor());
+			
+			CardLayout cardLayout = (CardLayout)(cardPane.getLayout());
+			cardLayout.show(cardPane, Integer.toString(index));
+			selectedTab = index;			
+		}
+		else {
+			selectedTab = -1;
+		}
 	}
-	// --------------------------------------------------------------------------------
-	//   Private methods
-	// -------------------------------------------------------------------------------- 
+	
+	public Tab getSelectedTab() {
+		return tabs[selectedTab];
+	}
+	
+	public JTextPane getSelectedTabContent() {
+		return contents[selectedTab];
+	}
+	// -------
+	// Private
+	// -------
 	private void increaseTabCapacity() {
 		Tab[] newTabs = new Tab[tabs.length * 2];
 		JTextPane[] newContents = new JTextPane[tabs.length * 2];
 		for (int i = 0; i < tabs.length; i++) {
 			newTabs[i] = tabs[i];
-			newContents[i] = textPanes[i];
+			newContents[i] = contents[i];
 		}
 		
 		tabs = newTabs;
-		textPanes = newContents;
+		contents = newContents;
+	}
+	// --------------------------------------------------------------------------------
+	//   Get and set methods
+	// --------------------------------------------------------------------------------
+	public int getSelectedTabIndex() {
+		return selectedTab;
 	}
 	// --------------------------------------------------------------------------------
 	//   Mouse listener

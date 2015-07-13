@@ -23,18 +23,26 @@ public class Tab extends JPanel {
 	private int width = 100;
 	private int height = 18;
 	
+	private File file;
 	private int position;
 	
-	private JLabel title;
+	private JLabel titleLbl;
 	private JLabel closeBtn; // Close button
 	private ImageIcon closeIconOut;
 	private ImageIcon closeIconIn;
 	
-	public Tab(String titleStr, int position) {
+	public Tab(File file, int position) {
+		this.file = file;
 		this.position = position;
-		title = new JLabel(titleStr);
-		title.setBackground(Color.blue);
-		add(title);
+		
+		if (file == null) {
+			titleLbl = new JLabel("Untitled");
+		}
+		else {
+			titleLbl = new JLabel(file.getName());
+		}
+		titleLbl.setBackground(Color.blue);
+		add(titleLbl);
 		
 		BufferedImage img = Utils.getImage("/res/close_button1.png");
 		closeIconOut = new ImageIcon(img);
@@ -51,6 +59,17 @@ public class Tab extends JPanel {
 		setLayout(layout);
 		
 		setPreferredSize(new Dimension(width, height));
+	}
+	// --------------------------------------------------------------------------------
+	//   Get and set methods
+	// --------------------------------------------------------------------------------
+	public File getFile() {
+		return file;
+	}
+	
+	public void setFile(File file) {
+		this.file = file;
+		titleLbl.setText(file.getName());
 	}
 	
 	public int getPosition() {
