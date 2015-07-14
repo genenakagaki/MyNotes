@@ -33,6 +33,8 @@ public class TabbedPane extends JPanel implements MouseListener {
 	private int tabCount;
 	private int selectedTab;
 	
+	private long lastEditedTime = System.currentTimeMillis();
+	
 	public TabbedPane(Window window) {
 		super();
 		
@@ -87,10 +89,8 @@ public class TabbedPane extends JPanel implements MouseListener {
 
 		Document textPaneDoc = textPane.getDocument();
 		textPaneDoc.addUndoableEditListener(new UndoableEditListener() {
-			@Override
-			public void undoableEditHappened(UndoableEditEvent e) {
+			public void undoableEditHappened(UndoableEditEvent e) {	
 				EditMenu.getUndoManager().addEdit(e.getEdit());
-				
 			}
 		});
 		contents[tabCount] = textPane;
@@ -141,7 +141,9 @@ public class TabbedPane extends JPanel implements MouseListener {
 	
 	public void setSelectedTab(int index) {
 		if (index != -1) {
-			tabs[selectedTab].setBackground(MyNotes.getSubColor());
+			if (selectedTab != -1) {
+				tabs[selectedTab].setBackground(MyNotes.getSubColor());				
+			}
 			tabs[index].setBackground(MyNotes.getMainColor());
 			
 			CardLayout cardLayout = (CardLayout)(cardPane.getLayout());
